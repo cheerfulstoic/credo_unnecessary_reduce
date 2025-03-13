@@ -14,6 +14,11 @@ defmodule CredoUnneccesaryReduce.Check do
       # params: [exclude: "Pattern of which files to ignore", include: "Pattern of which files to validate."]
     ]
 
+  # {:-, [line: 3, column: 26], [1]}
+
+  defguard is_ast_number(term) when is_integer(term) and rem(term, 2) == 0
+  defguard is_ast_number(term) when is_integer(term) and rem(term, 2) == 0
+
   def run(source_file, params \\ []) do
     issue_meta = IssueMeta.for(source_file, params)
 
@@ -74,12 +79,11 @@ defmodule CredoUnneccesaryReduce.Check do
          {
            :fn,
            _,
-           # [{:->, _, [[{_, _, nil}, {acc_var, _, nil}], [_, {:|, _, [_, {acc_var, _, nil}]}]]}]}
            [{:->, _, [[{_, _, nil}, {acc_var, _, nil}], list_ast]}]
          }
        )
        when is_list(list_ast) do
-    if match?({:|, _, [_, {acc_var, _, nil}]}, List.last(list_ast)) do
+    if match?({:|, _, [_, {^acc_var, _, nil}]}, List.last(list_ast)) do
       case length(list_ast) do
         1 -> :map
         _ -> :flat_map
@@ -143,7 +147,139 @@ defmodule CredoUnneccesaryReduce.Check do
     :filter
   end
 
-  defp reducible_to(_, _), do: nil
+  defp reducible_to(
+         init,
+         {:fn, _,
+          [
+            {:->, _,
+             [
+               [{item_var, _, nil}, {acc_var, _, nil}],
+               {:+, _,
+                [
+                  other_part_ast,
+                  {acc_var, _, nil}
+                ]}
+             ]}
+          ]}
+       ) do
+    if is_ast_number?(init) do
+      if match?({^item_var, _, _}, other_part_ast) do
+        :sum
+      else
+        :sum_by
+      end
+    end
+  end
+
+  defp reducible_to(
+         init,
+         {:fn, _,
+          [
+            {:->, _,
+             [
+               [{item_var, _, nil}, {acc_var, _, nil}],
+               {:+, _,
+                [
+                  {acc_var, _, nil},
+                  other_part_ast
+                ]}
+             ]}
+          ]}
+       ) do
+    if is_ast_number?(init) do
+      if match?({^item_var, _, _}, other_part_ast) do
+        :sum
+      else
+        :sum_by
+      end
+    end
+  end
+
+  defp reducible_to(
+         true,
+         {:fn, _,
+          [
+            {:->, _,
+             [
+               [_, {acc_var, _, nil}],
+               {operator, _,
+                [
+                  {acc_var, _, nil},
+                  _
+                ]}
+             ]}
+          ]}
+       )
+       when operator in [:&&, :and] do
+    :all?
+  end
+
+  defp reducible_to(
+         true,
+         {:fn, _,
+          [
+            {:->, _,
+             [
+               [_, {acc_var, _, nil}],
+               {operator, _,
+                [
+                  _,
+                  {acc_var, _, nil}
+                ]}
+             ]}
+          ]}
+       )
+       when operator in [:&&, :and] do
+    :all?
+  end
+
+  defp reducible_to(
+         false,
+         {:fn, _,
+          [
+            {:->, _,
+             [
+               [_, {acc_var, _, nil}],
+               {operator, _,
+                [
+                  {acc_var, _, nil},
+                  _
+                ]}
+             ]}
+          ]}
+       )
+       when operator in [:||, :or] do
+    :any?
+  end
+
+  defp reducible_to(
+         false,
+         {:fn, _,
+          [
+            {:->, _,
+             [
+               [_, {acc_var, _, nil}],
+               {operator, _,
+                [
+                  _,
+                  {acc_var, _, nil}
+                ]}
+             ]}
+          ]}
+       )
+       when operator in [:||, :or] do
+    :any?
+  end
+
+  # If this could be a guard, so much the better
+  defp is_ast_number?(number) when is_integer(number) or is_float(number), do: true
+  defp is_ast_number?({:-, _, [number]}) when is_integer(number) or is_float(number), do: true
+  defp is_ast_number?(_), do: false
+
+  defp reducible_to(init, ast) do
+    dbg()
+    nil
+  end
 
   defp issue_for(issue_meta, line_no, message) do
     format_issue(
