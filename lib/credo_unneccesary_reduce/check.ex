@@ -271,15 +271,15 @@ defmodule CredoUnneccesaryReduce.Check do
     :any?
   end
 
+  defp reducible_to(init, ast) do
+    # dbg()
+    nil
+  end
+
   # If this could be a guard, so much the better
   defp is_ast_number?(number) when is_integer(number) or is_float(number), do: true
   defp is_ast_number?({:-, _, [number]}) when is_integer(number) or is_float(number), do: true
   defp is_ast_number?(_), do: false
-
-  defp reducible_to(init, ast) do
-    dbg()
-    nil
-  end
 
   defp issue_for(issue_meta, line_no, message) do
     format_issue(

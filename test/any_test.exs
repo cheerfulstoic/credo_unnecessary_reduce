@@ -19,6 +19,32 @@ defmodule CredoUnneccesaryReduce.AnyTest do
   test "Enum.reduce, oh no!" do
     """
     defmodule NeoWeb.TestModule do
+      def mult(values) do
+        Enum.reduce(values, false, fn value, result ->
+          result || value
+        end)
+      end
+    end
+    """
+    |> to_source_file("lib/neo_web/test_module.ex")
+    |> run_check(Check)
+    |> assert_check_issue("Consider using Enum.any? instead of Enum.reduce.")
+
+    """
+    defmodule NeoWeb.TestModule do
+      def mult(values) do
+        Enum.reduce(values, false, fn value, result ->
+          value || result
+        end)
+      end
+    end
+    """
+    |> to_source_file("lib/neo_web/test_module.ex")
+    |> run_check(Check)
+    |> assert_check_issue("Consider using Enum.any? instead of Enum.reduce.")
+
+    """
+    defmodule NeoWeb.TestModule do
       def mult(numbers) do
         Enum.reduce(numbers, false, fn number, result ->
           result || rem(number, 2) == 0
@@ -115,6 +141,21 @@ defmodule CredoUnneccesaryReduce.AnyTest do
       def mult(numbers) do
         Enum.reduce(numbers, false, fn item, acc ->
           rem(item, 2) == 0 or acc
+        end)
+      end
+    end
+    """
+    |> to_source_file("lib/neo_web/test_module.ex")
+    |> run_check(Check)
+    |> assert_check_issue("Consider using Enum.any? instead of Enum.reduce.")
+  end
+
+  test "More complex examples" do
+    """
+    defmodule NeoWeb.TestModule do
+      def mult(numbers) do
+        Enum.reduce(numbers, false, fn item, acc ->
+          rem(item, 2) == 0 || rem(item, 3) == 0 || acc
         end)
       end
     end
