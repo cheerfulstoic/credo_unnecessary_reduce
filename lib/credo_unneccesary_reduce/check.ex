@@ -54,17 +54,37 @@ defmodule CredoUnneccesaryReduce.Check do
   defp reducible_to(
          [],
          {:fn, _,
-          [{:->, _, [[{_, _, nil}, {acc_var, _, nil}], [{:|, _, [_, {acc_var, _, nil}]}]]}]}
-       ) do
-    :map
+          [{:->, _, [[{_, _, nil}, {acc_var, _, nil}], {:++, _, [{acc_var, _, nil}, list_ast]}]}]}
+       )
+       when is_list(list_ast) do
+    case length(list_ast) do
+      0 ->
+        :map
+
+      1 ->
+        :map
+
+      _ ->
+        :flat_map
+    end
   end
 
   defp reducible_to(
          [],
-         {:fn, _,
-          [{:->, _, [[{_, _, nil}, {acc_var, _, nil}], {:++, _, [{acc_var, _, nil}, [_]]}]}]}
-       ) do
-    :map
+         {
+           :fn,
+           _,
+           # [{:->, _, [[{_, _, nil}, {acc_var, _, nil}], [_, {:|, _, [_, {acc_var, _, nil}]}]]}]}
+           [{:->, _, [[{_, _, nil}, {acc_var, _, nil}], list_ast]}]
+         }
+       )
+       when is_list(list_ast) do
+    if match?({:|, _, [_, {acc_var, _, nil}]}, List.last(list_ast)) do
+      case length(list_ast) do
+        1 -> :map
+        _ -> :flat_map
+      end
+    end
   end
 
   defp reducible_to(
