@@ -116,7 +116,7 @@ defmodule CredoUnneccesaryReduce.Check do
              ]}
           ]}
        ) do
-    :filter
+    :reject
   end
 
   defp reducible_to(
@@ -144,7 +144,7 @@ defmodule CredoUnneccesaryReduce.Check do
              ]}
           ]}
        ) do
-    :filter
+    :reject
   end
 
   defp reducible_to(
@@ -154,43 +154,26 @@ defmodule CredoUnneccesaryReduce.Check do
             {:->, _,
              [
                [{item_var, _, nil}, {acc_var, _, nil}],
-               {:+, _,
-                [
-                  other_part_ast,
-                  {acc_var, _, nil}
-                ]}
+               {operation, _, [part1_ast, part2_ast]}
              ]}
           ]}
-       ) do
+       )
+       when operation in ~w[+ - *]a do
     if is_ast_number?(init) do
-      if match?({^item_var, _, _}, other_part_ast) do
-        :sum
-      else
-        :sum_by
-      end
-    end
-  end
+      cond do
+        match?({^acc_var, _, nil}, part1_ast) ->
+          if match?({^item_var, _, _}, part2_ast) do
+            if(operation == :*, do: :product, else: :sum)
+          else
+            if(operation == :*, do: :product_by, else: :sum_by)
+          end
 
-  defp reducible_to(
-         init,
-         {:fn, _,
-          [
-            {:->, _,
-             [
-               [{item_var, _, nil}, {acc_var, _, nil}],
-               {:+, _,
-                [
-                  {acc_var, _, nil},
-                  other_part_ast
-                ]}
-             ]}
-          ]}
-       ) do
-    if is_ast_number?(init) do
-      if match?({^item_var, _, _}, other_part_ast) do
-        :sum
-      else
-        :sum_by
+        match?({^acc_var, _, nil}, part2_ast) ->
+          if match?({^item_var, _, _}, part1_ast) do
+            if(operation == :*, do: :product, else: :sum)
+          else
+            if(operation == :*, do: :product_by, else: :sum_by)
+          end
       end
     end
   end
