@@ -52,9 +52,9 @@ def deps do
     {:credo_unneccesary_reduce, "~> 0.1.0"}
   ]
 end
+```
 
 Then you should add `{CredoUnneccesaryReduce.Check, []},` to your `.credo.exs` file under the `enabled` section.
-```
 
 ## TODO
 
