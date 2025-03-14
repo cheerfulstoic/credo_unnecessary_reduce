@@ -1,6 +1,10 @@
 # CredoUnneccesaryReduce
 
-A custom [credo](https://github.com/rrrene/credo) check which looks for opportunities to refactor usage of `Enum.reduce` into other `Enum` functions.
+From the docs for `Enum.reduce/3`:
+
+> When an operation cannot be expressed by any of the functions in the Enum module, developers will most likely resort to reduce/3.
+
+This library implements a custom [credo](https://github.com/rrrene/credo) check which looks for opportunities to refactor usage of `Enum.reduce` into other `Enum` functions.
 
 For example, the following would be detected and could be replaced by a `Enum.map(numbers, &(&1 * 10))`
 
@@ -46,7 +50,8 @@ def deps do
     {:credo_unneccesary_reduce, "~> 0.1.0"}
   ]
 end
-```
+
+Then you should add `{CredoUnneccesaryReduce.Check, []},` to your `.credo.exs` file under the `enabled` section.
 
 ## TODO
 
