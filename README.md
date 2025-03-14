@@ -1,6 +1,39 @@
 # CredoUnneccesaryReduce
 
-**TODO: Add description**
+A custom [credo](https://github.com/rrrene/credo) check which looks for opportunities to refactor usage of `Enum.reduce` into other `Enum` functions.
+
+For example, the following would be detected and could be replaced by a `Enum.map(numbers, &(&1 * 10))`
+
+```elixir
+Enum.reduce(numbers, [], fn i, result -> [i * 10 | result] end)
+|> Enum.reverse()
+```
+
+```elixir
+Enum.reduce(numbers, [], fn i, result -> result ++ [i * 10] end)
+```
+
+While these examples could be replaced by `Enum.filter(numbers, &(rem(number, 2) == 0))`
+
+```elixir
+Enum.reduce(numbers, [], fn number, result ->
+  if rem(number, 2) != 0 do
+    result
+  else
+    [number | result]
+  end
+end)
+|> Enum.reverse()
+```
+
+Currently this library checks for cases of `Enum.reduce` which could be replaced by:
+
+* `Enum.any?`
+* `Enum.all?`
+* `Enum.filter`
+* `Enum.flat_map`
+* `Enum.map`
+* `Enum.sum`
 
 ## Installation
 
