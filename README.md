@@ -54,6 +54,7 @@ def deps do
 end
 
 Then you should add `{CredoUnneccesaryReduce.Check, []},` to your `.credo.exs` file under the `enabled` section.
+```
 
 ## TODO
 
