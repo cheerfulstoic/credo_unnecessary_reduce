@@ -55,6 +55,42 @@ defmodule CredoUnneccesaryReduce.FlatMapTest do
     |> assert_check_issue("Consider using Enum.flat_map instead of Enum.reduce.")
   end
 
+  test "other code in the function" do
+    """
+    defmodule NeoWeb.TestModule do
+      def mult(numbers) do
+        Enum.reduce(numbers, [], fn number, result ->
+          something = number * 2
+          something_else = number * 3
+
+          [something, something_else | result]
+        end)
+        |> Enum.reverse()
+      end
+    end
+    """
+    |> to_source_file("lib/neo_web/test_module.ex")
+    |> run_check(Check)
+    |> assert_check_issue("Consider using Enum.flat_map instead of Enum.reduce.")
+
+    """
+    defmodule NeoWeb.TestModule do
+      def mult(numbers) do
+        Enum.reduce(numbers, [], fn i, acc ->
+          intermediate = i / 3
+          intermediate_other = i / 4
+
+          acc ++ [intermediate * 7, intermediate * 9]
+        end)
+        |> Enum.reverse()
+      end
+    end
+    """
+    |> to_source_file("lib/neo_web/test_module.ex")
+    |> run_check(Check)
+    |> assert_check_issue("Consider using Enum.flat_map instead of Enum.reduce.")
+  end
+
   test "Doesn't matter if variable isn't used" do
     """
     defmodule NeoWeb.TestModule do

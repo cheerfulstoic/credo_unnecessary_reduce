@@ -43,6 +43,40 @@ defmodule CredoUnneccesaryReduce.MapTest do
     |> assert_check_issue("Consider using Enum.map instead of Enum.reduce.")
   end
 
+  test "other code in the function" do
+    """
+    defmodule NeoWeb.TestModule do
+      def mult(numbers) do
+        Enum.reduce(numbers, [], fn number, result ->
+          something = number * 2
+
+          [something | result]
+        end)
+        |> Enum.reverse()
+      end
+    end
+    """
+    |> to_source_file("lib/neo_web/test_module.ex")
+    |> run_check(Check)
+    |> assert_check_issue("Consider using Enum.map instead of Enum.reduce.")
+
+    """
+    defmodule NeoWeb.TestModule do
+      def mult(numbers) do
+        Enum.reduce(numbers, [], fn i, acc ->
+          intermediate = i / 3
+
+          acc ++ [intermediate * 2]
+        end)
+        |> Enum.reverse()
+      end
+    end
+    """
+    |> to_source_file("lib/neo_web/test_module.ex")
+    |> run_check(Check)
+    |> assert_check_issue("Consider using Enum.map instead of Enum.reduce.")
+  end
+
   test "Doesn't matter if variable isn't used" do
     """
     defmodule NeoWeb.TestModule do

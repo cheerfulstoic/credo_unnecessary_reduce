@@ -14,34 +14,30 @@ defmodule CredoUnneccesaryReduce.Check do
       # params: [exclude: "Pattern of which files to ignore", include: "Pattern of which files to validate."]
     ]
 
-  # {:-, [line: 3, column: 26], [1]}
-
-  defguard is_ast_number(term) when is_integer(term) and rem(term, 2) == 0
-  defguard is_ast_number(term) when is_integer(term) and rem(term, 2) == 0
-
   def run(source_file, params \\ []) do
     issue_meta = IssueMeta.for(source_file, params)
 
     Credo.Code.prewalk(source_file, &traverse(&1, &2, issue_meta))
-    # |> Enum.reject(&is_nil/1)
   end
 
   defp traverse(
-         {{:., _, [{:__aliases__, _, [:Enum]}, :reduce]}, meta, [_enumerable, initial_value, fun]} =
+         {{:., _, [{:__aliases__, _, [:Enum]}, :reduce]}, meta,
+          [
+            _enumerable,
+            initial_value,
+            {:fn, _, [{:->, _, [[{item_var, _, nil}, {acc_var, _, nil}], body_ast]}]}
+          ]} =
            ast,
          issues,
          issue_meta
        ) do
     new_issue =
-      if suggested_function = reducible_to(initial_value, fun) do
+      if suggested_function = reduce_reducible_to(initial_value, item_var, acc_var, body_ast) do
         issue_for(
           issue_meta,
           meta[:line],
           "Consider using Enum.#{suggested_function} instead of Enum.reduce."
         )
-      else
-        # IO.puts("NO MATCH!")
-        nil
       end
 
     if new_issue do
@@ -56,10 +52,22 @@ defmodule CredoUnneccesaryReduce.Check do
     {ast, issues}
   end
 
-  defp reducible_to(
+  # Will this work?  Not sure if everything can be judged by the last line...
+  defp reduce_reducible_to(
+         initial_value,
+         item_var,
+         acc_var,
+         {:__block__, _, list_ast}
+       )
+       when is_list(list_ast) do
+    reduce_reducible_to(initial_value, item_var, acc_var, List.last(list_ast))
+  end
+
+  defp reduce_reducible_to(
          [],
-         {:fn, _,
-          [{:->, _, [[{_, _, nil}, {acc_var, _, nil}], {:++, _, [{acc_var, _, nil}, list_ast]}]}]}
+         _item_var,
+         acc_var,
+         {:++, _, [{acc_var, _, nil}, list_ast]}
        )
        when is_list(list_ast) do
     case length(list_ast) do
@@ -74,13 +82,11 @@ defmodule CredoUnneccesaryReduce.Check do
     end
   end
 
-  defp reducible_to(
+  defp reduce_reducible_to(
          [],
-         {
-           :fn,
-           _,
-           [{:->, _, [[{_, _, nil}, {acc_var, _, nil}], list_ast]}]
-         }
+         _item_var,
+         acc_var,
+         list_ast
        )
        when is_list(list_ast) do
     if match?({:|, _, [_, {^acc_var, _, nil}]}, List.last(list_ast)) do
@@ -91,72 +97,47 @@ defmodule CredoUnneccesaryReduce.Check do
     end
   end
 
-  defp reducible_to(
+  defp reduce_reducible_to(
          [],
-         {:fn, _,
-          [
-            {:->, _,
-             [
-               [_, {acc_var, _, nil}],
-               {:if, _, [_, [do: [{:|, _, [_, {acc_var, _, nil}]}], else: {acc_var, _, nil}]]}
-             ]}
-          ]}
+         _item_var,
+         acc_var,
+         {:if, _, [_, [do: [{:|, _, [_, {acc_var, _, nil}]}], else: {acc_var, _, nil}]]}
        ) do
     :filter
   end
 
-  defp reducible_to(
+  defp reduce_reducible_to(
          [],
-         {:fn, _,
-          [
-            {:->, _,
-             [
-               [_, {acc_var, _, nil}],
-               {:if, _, [_, [do: {acc_var, _, nil}, else: [{:|, _, [_, {acc_var, _, nil}]}]]]}
-             ]}
-          ]}
+         _item_var,
+         acc_var,
+         {:if, _, [_, [do: {acc_var, _, nil}, else: [{:|, _, [_, {acc_var, _, nil}]}]]]}
        ) do
     :reject
   end
 
-  defp reducible_to(
+  defp reduce_reducible_to(
          [],
-         {:fn, _,
-          [
-            {:->, _,
-             [
-               [_, {acc_var, _, nil}],
-               {:if, _, [_, [do: {:++, _, [{acc_var, _, nil}, [_]]}, else: {acc_var, _, nil}]]}
-             ]}
-          ]}
+         _item_var,
+         acc_var,
+         {:if, _, [_, [do: {:++, _, [{acc_var, _, nil}, [_]]}, else: {acc_var, _, nil}]]}
        ) do
     :filter
   end
 
-  defp reducible_to(
+  defp reduce_reducible_to(
          [],
-         {:fn, _,
-          [
-            {:->, _,
-             [
-               [_, {acc_var, _, nil}],
-               {:if, _, [_, [do: {acc_var, _, nil}, else: {:++, _, [{acc_var, _, nil}, [_]]}]]}
-             ]}
-          ]}
+         _item_var,
+         acc_var,
+         {:if, _, [_, [do: {acc_var, _, nil}, else: {:++, _, [{acc_var, _, nil}, [_]]}]]}
        ) do
     :reject
   end
 
-  defp reducible_to(
+  defp reduce_reducible_to(
          init,
-         {:fn, _,
-          [
-            {:->, _,
-             [
-               [{item_var, _, nil}, {acc_var, _, nil}],
-               {operation, _, [part1_ast, part2_ast]}
-             ]}
-          ]}
+         item_var,
+         acc_var,
+         {operation, _, [part1_ast, part2_ast]}
        )
        when operation in ~w[+ - *]a do
     if is_ast_number?(init) do
@@ -178,86 +159,70 @@ defmodule CredoUnneccesaryReduce.Check do
     end
   end
 
-  defp reducible_to(
+  defp reduce_reducible_to(
          true,
-         {:fn, _,
+         _item_var,
+         acc_var,
+         {operator, _,
           [
-            {:->, _,
-             [
-               [_, {acc_var, _, nil}],
-               {operator, _,
-                [
-                  {acc_var, _, nil},
-                  _
-                ]}
-             ]}
+            {acc_var, _, nil},
+            _
           ]}
        )
        when operator in [:&&, :and] do
     :all?
   end
 
-  defp reducible_to(
+  defp reduce_reducible_to(
          true,
-         {:fn, _,
+         _item_var,
+         acc_var,
+         {operator, _,
           [
-            {:->, _,
-             [
-               [_, {acc_var, _, nil}],
-               {operator, _,
-                [
-                  _,
-                  {acc_var, _, nil}
-                ]}
-             ]}
+            _,
+            {acc_var, _, nil}
           ]}
        )
        when operator in [:&&, :and] do
     :all?
   end
 
-  defp reducible_to(
+  defp reduce_reducible_to(
          false,
-         {:fn, _,
+         _item_var,
+         acc_var,
+         {operator, _,
           [
-            {:->, _,
-             [
-               [_, {acc_var, _, nil}],
-               {operator, _,
-                [
-                  {acc_var, _, nil},
-                  _
-                ]}
-             ]}
+            {acc_var, _, nil},
+            _
           ]}
        )
        when operator in [:||, :or] do
     :any?
   end
 
-  defp reducible_to(
+  defp reduce_reducible_to(
          false,
-         {:fn, _,
+         _item_var,
+         acc_var,
+         {operator, _,
           [
-            {:->, _,
-             [
-               [_, {acc_var, _, nil}],
-               {operator, _,
-                [
-                  _,
-                  {acc_var, _, nil}
-                ]}
-             ]}
+            _,
+            {acc_var, _, nil}
           ]}
        )
        when operator in [:||, :or] do
     :any?
   end
 
-  defp reducible_to(init, ast) do
-    # dbg()
+  defp reduce_reducible_to(_init, _item_var, _acc_var, _ast) do
     nil
   end
+
+  # defp reduce_reducible_to(init, item_var, acc_var, ast) do
+  #   dbg()
+  #   nil
+  # end
 
   # If this could be a guard, so much the better
   defp is_ast_number?(number) when is_integer(number) or is_float(number), do: true
