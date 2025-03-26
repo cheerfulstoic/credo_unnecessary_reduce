@@ -63,6 +63,8 @@ defmodule CredoUnneccesaryReduce.FlatMapTest do
           something = number * 2
           something_else = number * 3
 
+          side_effect_fn(something_else)
+
           [something, something_else | result]
         end)
         |> Enum.reverse()
@@ -79,6 +81,8 @@ defmodule CredoUnneccesaryReduce.FlatMapTest do
         Enum.reduce(numbers, [], fn i, acc ->
           intermediate = i / 3
           intermediate_other = i / 4
+
+          side_effect_fn(intermediate)
 
           acc ++ [intermediate * 7, intermediate * 9]
         end)

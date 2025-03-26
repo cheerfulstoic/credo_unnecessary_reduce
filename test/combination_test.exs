@@ -19,7 +19,7 @@ defmodule CredoUnneccesaryReduce.CombinationTest do
     """
     |> to_source_file("lib/neo_web/test_module.ex")
     |> run_check(Check)
-    |> assert_check_issue("Consider using Enum.filter instead of Enum.reduce.")
+    |> assert_check_issue("Consider using Enum.filter or Enum.reject instead of Enum.reduce.")
 
     """
     defmodule NeoWeb.TestModule do
@@ -37,7 +37,7 @@ defmodule CredoUnneccesaryReduce.CombinationTest do
     """
     |> to_source_file("lib/neo_web/test_module.ex")
     |> run_check(Check)
-    |> assert_check_issue("Consider using Enum.filter instead of Enum.reduce.")
+    |> assert_check_issue("Consider using Enum.filter or Enum.reject instead of Enum.reduce.")
   end
 
   def assert_check_issue(code, message) do

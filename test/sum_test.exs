@@ -126,6 +126,42 @@ defmodule CredoUnneccesaryReduce.SumTest do
       |> assert_check_issue("Consider using Enum.sum_by instead of Enum.reduce.")
     end
 
+    test "other code in the function" do
+      """
+      defmodule NeoWeb.TestModule do
+        def mult(numbers) do
+          Enum.reduce(numbers, 0, fn number, result ->
+            intermediate = number / 3
+
+            side_effect_fn(intermediate)
+
+            (intermediate * 2) + result
+          end)
+        end
+      end
+      """
+      |> to_source_file("lib/neo_web/test_module.ex")
+      |> run_check(Check)
+      |> assert_check_issue("Consider using Enum.sum_by instead of Enum.reduce.")
+
+      """
+      defmodule NeoWeb.TestModule do
+        def mult(numbers) do
+          Enum.reduce(numbers, 0, fn number, result ->
+            intermediate = number / 3
+
+            side_effect_fn(intermediate)
+
+            result + (intermediate * 2)
+          end)
+        end
+      end
+      """
+      |> to_source_file("lib/neo_web/test_module.ex")
+      |> run_check(Check)
+      |> assert_check_issue("Consider using Enum.sum_by instead of Enum.reduce.")
+    end
+
     test "ok to start with a different value or use different variables" do
       """
       defmodule NeoWeb.TestModule do

@@ -32,12 +32,25 @@ defmodule CredoUnneccesaryReduce.Check do
          issue_meta
        ) do
     new_issue =
-      if suggested_function = reduce_reducible_to(initial_value, item_var, acc_var, body_ast) do
-        issue_for(
-          issue_meta,
-          meta[:line],
-          "Consider using Enum.#{suggested_function} instead of Enum.reduce."
-        )
+      case reduce_reducible_to(initial_value, item_var, acc_var, body_ast) do
+        suggested_functions when is_list(suggested_functions) ->
+          suggestions = Enum.map_join(suggested_functions, " or ", &"Enum.#{&1}")
+
+          issue_for(
+            issue_meta,
+            meta[:line],
+            "Consider using #{suggestions} instead of Enum.reduce."
+          )
+
+        nil ->
+          nil
+
+        suggested_function ->
+          issue_for(
+            issue_meta,
+            meta[:line],
+            "Consider using Enum.#{suggested_function} instead of Enum.reduce."
+          )
       end
 
     if new_issue do
@@ -98,39 +111,21 @@ defmodule CredoUnneccesaryReduce.Check do
   end
 
   defp reduce_reducible_to(
-         [],
-         _item_var,
+         initial_value,
+         item_var,
          acc_var,
-         {:if, _, [_, [do: [{:|, _, [_, {acc_var, _, nil}]}], else: {acc_var, _, nil}]]}
+         {:if, _, [_, [do: ast, else: {acc_var, _, nil}]]}
        ) do
-    :filter
+    if_is_reducible_to(initial_value, item_var, acc_var, ast)
   end
 
   defp reduce_reducible_to(
-         [],
-         _item_var,
+         initial_value,
+         item_var,
          acc_var,
-         {:if, _, [_, [do: {acc_var, _, nil}, else: [{:|, _, [_, {acc_var, _, nil}]}]]]}
+         {:if, _, [_, [do: {acc_var, _, nil}, else: ast]]}
        ) do
-    :reject
-  end
-
-  defp reduce_reducible_to(
-         [],
-         _item_var,
-         acc_var,
-         {:if, _, [_, [do: {:++, _, [{acc_var, _, nil}, [_]]}, else: {acc_var, _, nil}]]}
-       ) do
-    :filter
-  end
-
-  defp reduce_reducible_to(
-         [],
-         _item_var,
-         acc_var,
-         {:if, _, [_, [do: {acc_var, _, nil}, else: {:++, _, [{acc_var, _, nil}, [_]]}]]}
-       ) do
-    :reject
+    if_is_reducible_to(initial_value, item_var, acc_var, ast)
   end
 
   defp reduce_reducible_to(
@@ -140,21 +135,30 @@ defmodule CredoUnneccesaryReduce.Check do
          {operation, _, [part1_ast, part2_ast]}
        )
        when operation in ~w[+ - *]a do
+    # Doing some sort of mathimatical reduction
+    # TODO: Deal with floats!
     if is_ast_number?(init) do
-      cond do
-        match?({^acc_var, _, nil}, part1_ast) ->
-          if match?({^item_var, _, _}, part2_ast) do
-            if(operation == :*, do: :product, else: :sum)
-          else
-            if(operation == :*, do: :product_by, else: :sum_by)
-          end
+      [type1, type2] =
+        [part1_ast, part2_ast]
+        |> Enum.map(fn
+          {^acc_var, _, nil} -> :acc_var
+          {^item_var, _, nil} -> :item_var
+          part when is_integer(part) -> :integer
+          _ -> :other
+        end)
+        |> Enum.sort()
 
-        match?({^acc_var, _, nil}, part2_ast) ->
-          if match?({^item_var, _, _}, part1_ast) do
-            if(operation == :*, do: :product, else: :sum)
-          else
-            if(operation == :*, do: :product_by, else: :sum_by)
-          end
+      # Both :+ and :- have the same recommendation
+      # Subtraction could be considered addition of negative numbers
+      operation_type = if(operation == :*, do: :mult, else: :addition)
+
+      case {type1, type2, operation_type} do
+        {:acc_var, :item_var, :mult} -> :product
+        {:acc_var, :item_var, :addition} -> :sum
+        {:acc_var, :integer, :mult} -> nil
+        {:acc_var, :integer, :addition} -> :count
+        {:acc_var, _, :mult} -> :product_by
+        {:acc_var, _, :addition} -> :sum_by
       end
     end
   end
@@ -223,6 +227,45 @@ defmodule CredoUnneccesaryReduce.Check do
   #   dbg()
   #   nil
   # end
+
+  # For when there is an `if` where one part returns just the accumulator
+  defp if_is_reducible_to(
+         [],
+         _item_var,
+         acc_var,
+         [{:|, _, [_, {acc_var, _, nil}]}]
+       ) do
+    [:filter, :reject]
+  end
+
+  defp if_is_reducible_to(
+         [],
+         _item_var,
+         acc_var,
+         {:++, _, [{acc_var, _, nil}, [_]]}
+       ) do
+    [:filter, :reject]
+  end
+
+  defp if_is_reducible_to(
+         initial_value,
+         _item_var,
+         acc_var,
+         {:+, _, [{acc_var, _, nil}, value]}
+       )
+       when is_integer(initial_value) and is_integer(value) do
+    :count
+  end
+
+  defp if_is_reducible_to(
+         initial_value,
+         _item_var,
+         acc_var,
+         {:+, _, [value, {acc_var, _, nil}]}
+       )
+       when is_integer(initial_value) and is_integer(value) do
+    :count
+  end
 
   # If this could be a guard, so much the better
   defp is_ast_number?(number) when is_integer(number) or is_float(number), do: true

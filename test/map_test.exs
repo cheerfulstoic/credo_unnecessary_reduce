@@ -50,6 +50,8 @@ defmodule CredoUnneccesaryReduce.MapTest do
         Enum.reduce(numbers, [], fn number, result ->
           something = number * 2
 
+          side_effect_fn(something)
+
           [something | result]
         end)
         |> Enum.reverse()
@@ -65,6 +67,8 @@ defmodule CredoUnneccesaryReduce.MapTest do
       def mult(numbers) do
         Enum.reduce(numbers, [], fn i, acc ->
           intermediate = i / 3
+
+          side_effect_fn(intermediate)
 
           acc ++ [intermediate * 2]
         end)
