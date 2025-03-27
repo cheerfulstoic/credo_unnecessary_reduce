@@ -13,7 +13,7 @@ The goal is both to:
 * identify places where code could be simpler
 * help people learn about variety of useful functions that exist in Elixir's `Enum` module
 
-See also [[Why other Enum functions are often better than Enum.reduce]]
+See also [[Motivation]] in the wiki.
 
 ## Examples
 
