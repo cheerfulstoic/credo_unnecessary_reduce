@@ -8,6 +8,15 @@ From the docs for `Enum.reduce/3`:
 
 This library implements a custom [credo](https://github.com/rrrene/credo) check which looks for opportunities to refactor usage of `Enum.reduce` into other `Enum` functions.
 
+The goal is both to:
+
+* identify places where code could be simpler
+* help people learn about variety of useful functions that exist in Elixir's `Enum` module
+
+See also [[Why `Enum` functions are often better than `Enum.reduce`]]
+
+## Examples
+
 For example, the following would be detected and could be replaced by a `Enum.map(numbers, &(&1 * 10))`
 
 ```elixir
