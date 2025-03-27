@@ -52,6 +52,8 @@ Currently this library checks for cases of `Enum.reduce` which could be replaced
 * `Enum.sum`
 * `Enum.count`
 
+See [Examples](https://github.com/cheerfulstoic/credo_unneccesary_reduce/wiki/Examples) for all cases.
+
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
