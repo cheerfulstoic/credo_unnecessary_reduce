@@ -39,7 +39,9 @@ Currently this library checks for cases of `Enum.reduce` which could be replaced
 * `Enum.filter`
 * `Enum.flat_map`
 * `Enum.map`
+* `Enum.reject`
 * `Enum.sum`
+* `Enum.count`
 
 ## Installation
 
@@ -56,18 +58,42 @@ end
 
 Then you should add `{CredoUnneccesaryReduce.Check, []},` to your `.credo.exs` file under the `enabled` section.
 
+## Complex cases
+
+Sometimes an `Enum.reduce` call will be doing more than one thing at a time.  For example, this code could be replaced by an `Enum.filter` piped into an `Enum.map`:
+
+```elixir
+Enum.reduce(numbers, [], fn item, acc ->
+  if rem(item, 2) == 0 do
+    [item * 2 | acc]
+  else
+    acc
+  end
+end)
+|> Enum.reverse()
+```
+
+The split out version:
+
+```elixir
+numbers
+|> Enum.filter(& rem(&1, 2) == 0)
+|> Enum.map(& &1 * 2)
+```
+
+In this case the `credo_unneccesary_reduce` check will just recommend replacing with the outermost pattern in can detect (`Enum.filter` in this case).  It may be possible to support suggesting the whole chain, but because of the complexity of that challenge it's enough for now that `Enum.reduce` calls that can be simplified are identified successfully.
+
 ## TODO
 
 Low hanging fruit:
 
-* `Enum.count`
 * `Enum.count_until` (?)
 * `Enum.frequencies` (?)
 * `Enum.frequencies_by` (?)
 * `Enum.max` (?)
 * `Enum.max_by` (?)
-* `Enum.mix` (?)
-* `Enum.mix_by` (?)
+* `Enum.min` (?)
+* `Enum.min_by` (?)
 * `Enum.product` (?)
 * `Enum.product_by` (?)
 * `Map.new`
@@ -82,7 +108,6 @@ Unsure right now, could be good:
 * `Enum.join`
 * `Enum.min_max`
 * `Enum.min_max_by`
-* `Enum.reject`
 * `Enum.uniq`
 * `Enum.uniq_by`
 
