@@ -127,6 +127,21 @@ defmodule CredoUnneccesaryReduce.FilterTest do
     |> assert_check_issue("Consider using Enum.filter or Enum.reject instead of Enum.reduce.")
   end
 
+  test "Building a map" do
+    """
+    Enum.reduce(numbers, %{}, fn number, acc ->
+      if rem(number, 2) == 0 do
+        Map.put(acc, number, true)
+      else
+        acc
+      end
+    end)
+    """
+    |> to_source_file("lib/neo_web/test_module.ex")
+    |> run_check(Check)
+    |> assert_check_issue("Consider using Enum.filter or Enum.reject instead of Enum.reduce.")
+  end
+
   def assert_check_issue(code, message) do
     code
     |> assert_issue(fn issue ->

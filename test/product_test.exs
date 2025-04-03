@@ -21,7 +21,7 @@ defmodule CredoUnneccesaryReduce.ProductTest do
       """
       defmodule NeoWeb.TestModule do
         def mult(numbers) do
-          Enum.reduce(numbers, 0, fn number, result -> number * result end)
+          Enum.reduce(numbers, 1, fn number, result -> number * result end)
         end
       end
       """
@@ -32,7 +32,7 @@ defmodule CredoUnneccesaryReduce.ProductTest do
       """
       defmodule NeoWeb.TestModule do
         def mult(numbers) do
-          Enum.reduce(numbers, 0, fn number, result -> result * number end)
+          Enum.reduce(numbers, 1, fn number, result -> result * number end)
         end
       end
       """
@@ -84,7 +84,7 @@ defmodule CredoUnneccesaryReduce.ProductTest do
       """
       defmodule NeoWeb.TestModule do
         def mult(numbers) do
-          Enum.reduce(numbers, 0, fn number, result -> (number + 2) * result end)
+          Enum.reduce(numbers, 1, fn number, result -> (number + 2) * result end)
         end
       end
       """
@@ -95,7 +95,7 @@ defmodule CredoUnneccesaryReduce.ProductTest do
       """
       defmodule NeoWeb.TestModule do
         def mult(numbers) do
-          Enum.reduce(numbers, 0, fn number, result -> result * (number + 2) end)
+          Enum.reduce(numbers, 1, fn number, result -> result * (number + 2) end)
         end
       end
       """
@@ -106,7 +106,7 @@ defmodule CredoUnneccesaryReduce.ProductTest do
       """
       defmodule NeoWeb.TestModule do
         def mult(numbers) do
-          Enum.reduce(numbers, 0.0, fn number, result -> (number + 2.2) * result end)
+          Enum.reduce(numbers, 1.0, fn number, result -> (number + 2.2) * result end)
         end
       end
       """
@@ -117,7 +117,7 @@ defmodule CredoUnneccesaryReduce.ProductTest do
       """
       defmodule NeoWeb.TestModule do
         def mult(numbers) do
-          Enum.reduce(numbers, 0.0, fn number, result -> result * (number + 2.2) end)
+          Enum.reduce(numbers, 1.0, fn number, result -> result * (number + 2.2) end)
         end
       end
       """

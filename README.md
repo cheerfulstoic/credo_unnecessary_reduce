@@ -51,6 +51,7 @@ Currently this library checks for cases of `Enum.reduce` which could be replaced
 * `Enum.reject`
 * `Enum.sum`
 * `Enum.count`
+* `Map.new`
 
 See [Examples](https://github.com/cheerfulstoic/credo_unneccesary_reduce/wiki/Examples) for all cases.
 
@@ -107,7 +108,6 @@ Low hanging fruit:
 * `Enum.min_by` (?)
 * `Enum.product` (?)
 * `Enum.product_by` (?)
-* `Map.new`
 
 Unsure right now, could be good:
 

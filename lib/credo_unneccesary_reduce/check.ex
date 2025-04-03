@@ -25,16 +25,19 @@ defmodule CredoUnneccesaryReduce.Check do
           [
             _enumerable,
             initial_value,
-            {:fn, _, [{:->, _, [[{item_var, _, nil}, {acc_var, _, nil}], body_ast]}]}
+            {:fn, _, [{:->, _, [[item_ast, {acc_var, _, nil}], body_ast]}]}
           ]} =
            ast,
          issues,
          issue_meta
        ) do
+    # Not idea really, but these might be the only cases we deal with
+    # and it would be nice to avoid having `reduce_reducible_to` have to
+    # deal with more ast stuff...
     new_issue =
-      case reduce_reducible_to(initial_value, item_var, acc_var, body_ast) do
+      case reduce_reducible_to(initial_value, item_ast, acc_var, body_ast) do
         suggested_functions when is_list(suggested_functions) ->
-          suggestions = Enum.map_join(suggested_functions, " or ", &"Enum.#{&1}")
+          suggestions = Enum.join(suggested_functions, " or ")
 
           issue_for(
             issue_meta,
@@ -49,7 +52,7 @@ defmodule CredoUnneccesaryReduce.Check do
           issue_for(
             issue_meta,
             meta[:line],
-            "Consider using Enum.#{suggested_function} instead of Enum.reduce."
+            "Consider using #{suggested_function} instead of Enum.reduce."
           )
       end
 
@@ -68,69 +71,69 @@ defmodule CredoUnneccesaryReduce.Check do
   # Will this work?  Not sure if everything can be judged by the last line...
   defp reduce_reducible_to(
          initial_value,
-         item_var,
+         item_ast,
          acc_var,
          {:__block__, _, list_ast}
        )
        when is_list(list_ast) do
-    reduce_reducible_to(initial_value, item_var, acc_var, List.last(list_ast))
+    reduce_reducible_to(initial_value, item_ast, acc_var, List.last(list_ast))
   end
 
   defp reduce_reducible_to(
          [],
-         _item_var,
+         _item_ast,
          acc_var,
          {:++, _, [{acc_var, _, nil}, list_ast]}
        )
        when is_list(list_ast) do
     case length(list_ast) do
       0 ->
-        :map
+        "Enum.map"
 
       1 ->
-        :map
+        "Enum.map"
 
       _ ->
-        :flat_map
+        "Enum.flat_map"
     end
   end
 
   defp reduce_reducible_to(
          [],
-         _item_var,
+         _item_ast,
          acc_var,
          list_ast
        )
        when is_list(list_ast) do
     if match?({:|, _, [_, {^acc_var, _, nil}]}, List.last(list_ast)) do
       case length(list_ast) do
-        1 -> :map
-        _ -> :flat_map
+        1 -> "Enum.map"
+        _ -> "Enum.flat_map"
       end
     end
   end
 
   defp reduce_reducible_to(
          initial_value,
-         item_var,
+         item_ast,
          acc_var,
          {:if, _, [_, [do: ast, else: {acc_var, _, nil}]]}
        ) do
-    if_is_reducible_to(initial_value, item_var, acc_var, ast)
+    if_is_reducible_to(initial_value, item_ast, acc_var, ast)
   end
 
   defp reduce_reducible_to(
          initial_value,
-         item_var,
+         item_ast,
          acc_var,
          {:if, _, [_, [do: {acc_var, _, nil}, else: ast]]}
        ) do
-    if_is_reducible_to(initial_value, item_var, acc_var, ast)
+    if_is_reducible_to(initial_value, item_ast, acc_var, ast)
   end
 
   defp reduce_reducible_to(
          init,
-         item_var,
+         {item_var, _, nil},
          acc_var,
          {operation, _, [part1_ast, part2_ast]}
        )
@@ -153,19 +156,19 @@ defmodule CredoUnneccesaryReduce.Check do
       operation_type = if(operation == :*, do: :mult, else: :addition)
 
       case {type1, type2, operation_type} do
-        {:acc_var, :item_var, :mult} -> :product
-        {:acc_var, :item_var, :addition} -> :sum
+        {:acc_var, :item_var, :mult} -> "Enum.product"
+        {:acc_var, :item_var, :addition} -> "Enum.sum"
         {:acc_var, :integer, :mult} -> nil
-        {:acc_var, :integer, :addition} -> :count
-        {:acc_var, _, :mult} -> :product_by
-        {:acc_var, _, :addition} -> :sum_by
+        {:acc_var, :integer, :addition} -> "Enum.count"
+        {:acc_var, _, :mult} -> "Enum.product_by"
+        {:acc_var, _, :addition} -> "Enum.sum_by"
       end
     end
   end
 
   defp reduce_reducible_to(
          true,
-         _item_var,
+         _item_ast,
          acc_var,
          {operator, _,
           [
@@ -174,12 +177,12 @@ defmodule CredoUnneccesaryReduce.Check do
           ]}
        )
        when operator in [:&&, :and] do
-    :all?
+    "Enum.all?"
   end
 
   defp reduce_reducible_to(
          true,
-         _item_var,
+         _item_ast,
          acc_var,
          {operator, _,
           [
@@ -188,12 +191,12 @@ defmodule CredoUnneccesaryReduce.Check do
           ]}
        )
        when operator in [:&&, :and] do
-    :all?
+    "Enum.all?"
   end
 
   defp reduce_reducible_to(
          false,
-         _item_var,
+         _item_ast,
          acc_var,
          {operator, _,
           [
@@ -202,12 +205,12 @@ defmodule CredoUnneccesaryReduce.Check do
           ]}
        )
        when operator in [:||, :or] do
-    :any?
+    "Enum.any?"
   end
 
   defp reduce_reducible_to(
          false,
-         _item_var,
+         _item_ast,
          acc_var,
          {operator, _,
           [
@@ -216,55 +219,62 @@ defmodule CredoUnneccesaryReduce.Check do
           ]}
        )
        when operator in [:||, :or] do
-    :any?
+    "Enum.any?"
   end
 
-  defp reduce_reducible_to(_init, _item_var, _acc_var, _ast) do
+  defp reduce_reducible_to(
+         {:%{}, _, _},
+         _item_ast,
+         acc_var,
+         {{:., _, [{:__aliases__, _, [:Map]}, :put]}, _,
+          [
+            {acc_var, _, nil},
+            _,
+            _
+          ]}
+       ) do
+    "Map.new"
+  end
+
+  defp reduce_reducible_to(_initial_value, _item_ast, _acc_var, _ast) do
     nil
   end
 
-  # defp reduce_reducible_to(init, item_var, acc_var, ast) do
+  # defp reduce_reducible_to(initial_value, item_ast, acc_var, ast) do
   #   dbg()
   #   nil
   # end
 
   # For when there is an `if` where one part returns just the accumulator
   defp if_is_reducible_to(
-         [],
-         _item_var,
-         acc_var,
-         [{:|, _, [_, {acc_var, _, nil}]}]
-       ) do
-    [:filter, :reject]
-  end
-
-  defp if_is_reducible_to(
-         [],
-         _item_var,
-         acc_var,
-         {:++, _, [{acc_var, _, nil}, [_]]}
-       ) do
-    [:filter, :reject]
-  end
-
-  defp if_is_reducible_to(
          initial_value,
-         _item_var,
+         _item_ast,
          acc_var,
          {:+, _, [{acc_var, _, nil}, value]}
        )
        when is_integer(initial_value) and is_integer(value) do
-    :count
+    "Enum.count"
   end
 
   defp if_is_reducible_to(
          initial_value,
-         _item_var,
+         _item_ast,
          acc_var,
          {:+, _, [value, {acc_var, _, nil}]}
        )
        when is_integer(initial_value) and is_integer(value) do
-    :count
+    "Enum.count"
+  end
+
+  defp if_is_reducible_to(
+         initial_value,
+         _item_ast,
+         _acc_var,
+         _
+       ) do
+    if initial_value == [] or match?({:%{}, _, _}, initial_value) do
+      ["Enum.filter", "Enum.reject"]
+    end
   end
 
   # If this could be a guard, so much the better
