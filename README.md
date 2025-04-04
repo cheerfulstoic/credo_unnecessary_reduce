@@ -28,7 +28,7 @@ Enum.reduce(numbers, [], fn i, result -> [i * 10 | result] end)
 Enum.reduce(numbers, [], fn i, result -> result ++ [i * 10] end)
 ```
 
-While these examples could be replaced by `Enum.filter(numbers, &(rem(number, 2) == 0))`
+While this example could be replaced by `Enum.filter(numbers, &(rem(number, 2) == 0))`
 
 ```elixir
 Enum.reduce(numbers, [], fn number, result ->
@@ -48,6 +48,8 @@ Currently this library checks for cases of `Enum.reduce` which could be replaced
 * `Enum.filter`
 * `Enum.flat_map`
 * `Enum.map`
+* `Enum.product` (?)
+* `Enum.product_by` (?)
 * `Enum.reject`
 * `Enum.sum`
 * `Enum.count`
@@ -70,9 +72,9 @@ end
 
 Then you should add `{CredoUnneccesaryReduce.Check, []},` to your `.credo.exs` file under the `enabled` section.
 
-## Complex cases
+## Combination cases
 
-Sometimes an `Enum.reduce` call will be doing more than one thing at a time.  For example, this code could be replaced by an `Enum.filter` piped into an `Enum.map`:
+Sometimes an `Enum.reduce` call will be doing more than one thing at a time.  For example it's very common to have a `reduce` can be replaced by an `Enum.filter` piped into an `Enum.map`:
 
 ```elixir
 Enum.reduce(numbers, [], fn item, acc ->
@@ -106,8 +108,6 @@ Low hanging fruit:
 * `Enum.max_by` (?)
 * `Enum.min` (?)
 * `Enum.min_by` (?)
-* `Enum.product` (?)
-* `Enum.product_by` (?)
 
 Unsure right now, could be good:
 
