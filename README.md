@@ -6,7 +6,7 @@ From the docs for `Enum.reduce/3`:
 
 -----
 
-This library implements a custom [credo](https://github.com/rrrene/credo) check which looks for opportunities to refactor usage of `Enum.reduce` into other `Enum` functions.
+This library implements a custom [credo](https://github.com/rrrene/credo) check which looks for opportunities to refactor usage of `Enum.reduce` into other `Enum` functions (and `Map.new`!).
 
 The goal is both to:
 
