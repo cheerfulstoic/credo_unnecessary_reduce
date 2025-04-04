@@ -1,0 +1,98 @@
+# Untitled notebook
+
+```elixir
+Mix.install([
+  {:benchee, "~> 1.3"},
+  {:benchee_csv, "~> 1.0"},
+  {:nimble_csv, "~> 1.2"},
+  {:kino_vega_lite, "~> 0.1.11"},
+  {:kino_explorer, "~> 0.1.20"}
+])
+```
+
+## Section
+
+```elixir
+NimbleCSV.define(MyParser, separator: ",", escape: "\"")
+
+results =
+Path.join(__DIR__, "benchmark.csv")
+|> File.stream!
+|> MyParser.parse_stream()
+|> Stream.map(fn [
+  task,
+  input,
+  iterations_per_second,
+  _,
+  run_time_avg,
+  run_time_median,
+  _,
+  _,
+  _,
+  _,
+  _,
+  memory_usage_avg,
+  memory_usage_median,
+  _,
+  _,
+  _,
+  _,
+  _
+] ->
+  [count, type] = String.split(input, " ")
+  count = String.to_integer(count)
+
+  [algorithm, task] = String.split(task, "|")
+  iterations_per_second = String.to_float(iterations_per_second)
+  run_time_avg = String.to_float(run_time_avg)
+  run_time_median = String.to_float(run_time_median)
+
+  %{
+    task_count: "#{count} #{task}",
+    algorithm: algorithm,
+    task: task,
+    count: count,
+    type: type,
+    iterations_per_second: iterations_per_second,
+    run_time_avg: run_time_avg,
+    run_time_median: run_time_median,
+    memory_usage_avg: memory_usage_avg,
+    memory_usage_median: memory_usage_median
+  }
+end)
+|> Enum.group_by(& {&1.task, &1.type})
+
+```
+
+Hello!
+
+```elixir
+# Iterate over each key-value pair in the map
+key = :iterations_per_second
+
+results
+|> Enum.map(fn {{task, type}, result_group} ->
+  max_by_count =
+    result_group
+    |> Enum.group_by(& &1.count)
+    |> Enum.map(fn {count, group} -> {count, Enum.map(group, & &1[key])} end)
+    |> Map.new(fn {count, values} -> {count, Enum.max(values)} end)
+
+  result_group =
+    result_group
+    |> Enum.map(& Map.put(&1, :value, (100 * &1[key] / max_by_count[&1.count])))
+    
+  # Create a new VegaLite chart
+  vl = VegaLite.new(title: "#{task} - #{type}")
+  |> VegaLite.data_from_values(result_group)
+  |> VegaLite.mark(:line)
+  |> VegaLite.encode_field(:x, "count", type: :nominal)
+  |> VegaLite.encode_field(:y, "value", type: :quantitative, title: "% of fastest")
+  |> VegaLite.encode_field(:color, "algorithm", type: :nominal)
+
+  # Render the chart using Kino VegaLite
+  Kino.VegaLite.new(vl)
+end)
+|> Kino.Layout.grid(columns: 2)
+
+```
