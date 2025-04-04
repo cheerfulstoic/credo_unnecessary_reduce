@@ -48,8 +48,8 @@ Currently this library checks for cases of `Enum.reduce` which could be replaced
 * `Enum.filter`
 * `Enum.flat_map`
 * `Enum.map`
-* `Enum.product` (?)
-* `Enum.product_by` (?)
+* `Enum.product`
+* `Enum.product_by`
 * `Enum.reject`
 * `Enum.sum`
 * `Enum.count`
@@ -99,15 +99,15 @@ In this case the `credo_unneccesary_reduce` check will just recommend replacing 
 
 ## TODO
 
-Low hanging fruit:
+Potential low hanging fruit:
 
-* `Enum.count_until` (?)
-* `Enum.frequencies` (?)
-* `Enum.frequencies_by` (?)
-* `Enum.max` (?)
-* `Enum.max_by` (?)
-* `Enum.min` (?)
-* `Enum.min_by` (?)
+* `Enum.count_until`
+* `Enum.frequencies`
+* `Enum.frequencies_by`
+* `Enum.max`
+* `Enum.max_by`
+* `Enum.min`
+* `Enum.min_by`
 
 Unsure right now, could be good:
 
