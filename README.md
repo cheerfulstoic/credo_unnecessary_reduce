@@ -17,18 +17,20 @@ See also [Motivation](https://github.com/cheerfulstoic/credo_unneccesary_reduce/
 
 ## Examples
 
-For example, the following would be detected and could be replaced by a `Enum.map(numbers, &(&1 * 10))`
+For example, the following cases would be detected:
 
 ```elixir
 Enum.reduce(numbers, [], fn i, result -> [i * 10 | result] end)
 |> Enum.reverse()
-```
 
-```elixir
+# The `++` is another way to build a list in Elixir, but because of the way lists are 
+# stored, it's much more efficient to prepend and then reverse.
 Enum.reduce(numbers, [], fn i, result -> result ++ [i * 10] end)
 ```
 
-While this example could be replaced by `Enum.filter(numbers, &(rem(number, 2) == 0))`
+Both of these cases could be replaced by a `Enum.map(numbers, &(&1 * 10))`
+
+For a different example:
 
 ```elixir
 Enum.reduce(numbers, [], fn number, result ->
@@ -40,6 +42,8 @@ Enum.reduce(numbers, [], fn number, result ->
 end)
 |> Enum.reverse()
 ```
+
+That whole block could be replaced by `Enum.filter(numbers, &(rem(number, 2) == 0))`.
 
 Currently this library checks for cases of `Enum.reduce` which could be replaced by:
 
@@ -55,7 +59,7 @@ Currently this library checks for cases of `Enum.reduce` which could be replaced
 * `Enum.count`
 * `Map.new`
 
-See [Examples](https://github.com/cheerfulstoic/credo_unneccesary_reduce/wiki/Examples) for all cases.
+See [Examples](https://github.com/cheerfulstoic/credo_unneccesary_reduce/wiki/Examples) for specific cases of code that is detected.
 
 ## Installation
 
