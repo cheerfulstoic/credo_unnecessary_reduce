@@ -20,6 +20,7 @@ defmodule CredoUnnecessaryReduce.MixProject do
   defp package do
     [
       maintainers: ["Brian Underwood"],
+      licenses: ["MIT"],
       links: %{
         "GitHub" => @source_url,
         Changelog: "#{@source_url}/blob/main/CHANGELOG.md"
