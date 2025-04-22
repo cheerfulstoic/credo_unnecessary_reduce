@@ -3,10 +3,10 @@
 #   Map.put(acc, atom_key, value)
 # end)
 
-defmodule CredoUnneccesaryReduce.MapNewTest do
+defmodule CredoUnnecessaryReduce.MapNewTest do
   use Credo.Test.Case, async: true
 
-  alias CredoUnneccesaryReduce.Check
+  alias CredoUnnecessaryReduce.Check
 
   test "Map.new is good" do
     """

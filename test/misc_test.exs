@@ -1,7 +1,7 @@
-defmodule CredoUnneccesaryReduce.MiscTest do
+defmodule CredoUnnecessaryReduce.MiscTest do
   use Credo.Test.Case, async: true
 
-  alias CredoUnneccesaryReduce.Check
+  alias CredoUnnecessaryReduce.Check
 
   # Don't really know that this would happen, TBH, because it means
   # you're doing a calculation that doesn't have any result, but good to check

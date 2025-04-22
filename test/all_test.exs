@@ -1,7 +1,7 @@
-defmodule CredoUnneccesaryReduce.AllTest do
+defmodule CredoUnnecessaryReduce.AllTest do
   use Credo.Test.Case, async: true
 
-  alias CredoUnneccesaryReduce.Check
+  alias CredoUnnecessaryReduce.Check
 
   test "Enum.all? is good" do
     """

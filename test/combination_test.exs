@@ -1,7 +1,7 @@
-defmodule CredoUnneccesaryReduce.CombinationTest do
+defmodule CredoUnnecessaryReduce.CombinationTest do
   use Credo.Test.Case, async: true
 
-  alias CredoUnneccesaryReduce.Check
+  alias CredoUnnecessaryReduce.Check
 
   test "Something that can be simplified to Enum.filter + Enum.map" do
     """

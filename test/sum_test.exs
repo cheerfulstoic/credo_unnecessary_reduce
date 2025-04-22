@@ -1,7 +1,7 @@
-defmodule CredoUnneccesaryReduce.SumTest do
+defmodule CredoUnnecessaryReduce.SumTest do
   use Credo.Test.Case, async: true
 
-  alias CredoUnneccesaryReduce.Check
+  alias CredoUnnecessaryReduce.Check
 
   describe "sum: +" do
     test "Enum.sum is good" do

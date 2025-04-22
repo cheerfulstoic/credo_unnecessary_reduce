@@ -1,4 +1,4 @@
-defmodule CredoUnneccesaryReduce.Check do
+defmodule CredoUnnecessaryReduce.Check do
   @moduledoc """
   TODO
   """

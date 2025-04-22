@@ -1,7 +1,7 @@
-defmodule CredoUnneccesaryReduce.CountTest do
+defmodule CredoUnnecessaryReduce.CountTest do
   use Credo.Test.Case, async: true
 
-  alias CredoUnneccesaryReduce.Check
+  alias CredoUnnecessaryReduce.Check
 
   test "Enum.count is good" do
     """

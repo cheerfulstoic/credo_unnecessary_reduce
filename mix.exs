@@ -1,9 +1,9 @@
-defmodule CredoUnneccesaryReduce.MixProject do
+defmodule CredoUnnecessaryReduce.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :credo_unneccesary_reduce,
+      app: :credo_unnecessary_reduce,
       version: "0.1.0",
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,

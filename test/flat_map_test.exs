@@ -1,7 +1,7 @@
-defmodule CredoUnneccesaryReduce.FlatMapTest do
+defmodule CredoUnnecessaryReduce.FlatMapTest do
   use Credo.Test.Case, async: true
 
-  alias CredoUnneccesaryReduce.Check
+  alias CredoUnnecessaryReduce.Check
 
   test "Enum.flat_map is good" do
     """

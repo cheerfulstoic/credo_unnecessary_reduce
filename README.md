@@ -1,4 +1,4 @@
-# CredoUnneccesaryReduce
+# CredoUnnecessaryReduce
 
 From the docs for `Enum.reduce/3`:
 
@@ -13,7 +13,7 @@ The goal is both to:
 * identify places where code could be simpler
 * help people learn about variety of useful functions that exist in Elixir's `Enum` module
 
-See also [Motivation](https://github.com/cheerfulstoic/credo_unneccesary_reduce/wiki/Motivation) in the wiki.
+See also [Motivation](https://github.com/cheerfulstoic/credo_unnecessary_reduce/wiki/Motivation) in the wiki.
 
 ## Examples
 
@@ -59,22 +59,22 @@ Currently this library checks for cases of `Enum.reduce` which could be replaced
 * `Enum.count`
 * `Map.new`
 
-See [Examples](https://github.com/cheerfulstoic/credo_unneccesary_reduce/wiki/Examples) for specific cases of code that is detected.
+See [Examples](https://github.com/cheerfulstoic/credo_unnecessary_reduce/wiki/Examples) for specific cases of code that is detected.
 
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `credo_unneccesary_reduce` to your list of dependencies in `mix.exs`:
+by adding `credo_unnecessary_reduce` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:credo_unneccesary_reduce, "~> 0.1.0"}
+    {:credo_unnecessary_reduce, "~> 0.1.0"}
   ]
 end
 ```
 
-Then you should add `{CredoUnneccesaryReduce.Check, []},` to your `.credo.exs` file under the `enabled` section.
+Then you should add `{CredoUnnecessaryReduce.Check, []},` to your `.credo.exs` file under the `enabled` section.
 
 ## Combination cases
 
@@ -99,7 +99,7 @@ numbers
 |> Enum.map(& &1 * 2)
 ```
 
-In this case the `credo_unneccesary_reduce` check will just recommend replacing with the outermost pattern in can detect (`Enum.filter` in this case).  It may be possible to support suggesting the whole chain, but because of the complexity of that challenge it's enough for now that `Enum.reduce` calls that can be simplified are identified successfully.
+In this case the `credo_unnecessary_reduce` check will just recommend replacing with the outermost pattern in can detect (`Enum.filter` in this case).  It may be possible to support suggesting the whole chain, but because of the complexity of that challenge it's enough for now that `Enum.reduce` calls that can be simplified are identified successfully.
 
 ## TODO
 
@@ -128,4 +128,4 @@ Unsure right now, could be good:
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/credo_unneccesary_reduce>.
+be found at <https://hexdocs.pm/credo_unnecessary_reduce>.

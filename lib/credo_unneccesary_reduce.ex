@@ -1,6 +1,6 @@
-defmodule CredoUnneccesaryReduce do
+defmodule CredoUnnecessaryReduce do
   # @moduledoc """
-  # Documentation for `CredoUnneccesaryReduce`.
+  # Documentation for `CredoUnnecessaryReduce`.
   # TODO
   # """
 end

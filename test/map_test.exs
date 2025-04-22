@@ -1,7 +1,7 @@
-defmodule CredoUnneccesaryReduce.MapTest do
+defmodule CredoUnnecessaryReduce.MapTest do
   use Credo.Test.Case, async: true
 
-  alias CredoUnneccesaryReduce.Check
+  alias CredoUnnecessaryReduce.Check
 
   test "Enum.map is good" do
     """

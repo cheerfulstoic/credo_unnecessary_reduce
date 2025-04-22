@@ -1,7 +1,7 @@
-defmodule CredoUnneccesaryReduce.FilterTest do
+defmodule CredoUnnecessaryReduce.FilterTest do
   use Credo.Test.Case, async: true
 
-  alias CredoUnneccesaryReduce.Check
+  alias CredoUnnecessaryReduce.Check
 
   test "Enum.filter is good" do
     """
