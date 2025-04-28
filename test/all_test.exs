@@ -150,6 +150,22 @@ defmodule CredoUnnecessaryReduce.AllTest do
     |> assert_check_issue("Consider using Enum.all? instead of Enum.reduce.")
   end
 
+  test "ok when piped" do
+    """
+    defmodule NeoWeb.TestModule do
+      def mult(values) do
+        values
+        |> Enum.reduce(true, fn value, result ->
+          result && value
+        end)
+      end
+    end
+    """
+    |> to_source_file("lib/neo_web/test_module.ex")
+    |> run_check(Check)
+    |> assert_check_issue("Consider using Enum.all? instead of Enum.reduce.")
+  end
+
   test "More complex examples" do
     """
     defmodule NeoWeb.TestModule do

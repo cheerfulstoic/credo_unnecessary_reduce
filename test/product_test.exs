@@ -41,6 +41,20 @@ defmodule CredoUnnecessaryReduce.ProductTest do
       |> assert_check_issue("Consider using Enum.product instead of Enum.reduce.")
     end
 
+    test "ok when piped" do
+      """
+      defmodule NeoWeb.TestModule do
+        def mult(numbers) do
+          numbers
+          |> Enum.reduce(1, fn number, result -> number * result end)
+        end
+      end
+      """
+      |> to_source_file("lib/neo_web/test_module.ex")
+      |> run_check(Check)
+      |> assert_check_issue("Consider using Enum.product instead of Enum.reduce.")
+    end
+
     test "ok to start with a different value or use different variables" do
       """
       defmodule NeoWeb.TestModule do
@@ -118,6 +132,20 @@ defmodule CredoUnnecessaryReduce.ProductTest do
       defmodule NeoWeb.TestModule do
         def mult(numbers) do
           Enum.reduce(numbers, 1.0, fn number, result -> result * (number + 2.2) end)
+        end
+      end
+      """
+      |> to_source_file("lib/neo_web/test_module.ex")
+      |> run_check(Check)
+      |> assert_check_issue("Consider using Enum.product_by instead of Enum.reduce.")
+    end
+
+    test "ok when piped" do
+      """
+      defmodule NeoWeb.TestModule do
+        def mult(numbers) do
+          numbers
+          |> Enum.reduce(1, fn number, result -> (number + 2) * result end)
         end
       end
       """
