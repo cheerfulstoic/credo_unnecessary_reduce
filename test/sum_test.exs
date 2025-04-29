@@ -64,6 +64,19 @@ defmodule CredoUnnecessaryReduce.SumTest do
       |> run_check(Check)
       |> assert_check_issue("Consider using Enum.sum instead of Enum.reduce.")
     end
+
+    test "ok when piped" do
+      """
+      defmodule NeoWeb.TestModule do
+        def mult(numbers) do
+          numbers |> Enum.reduce(0, fn number, result -> number + result end)
+        end
+      end
+      """
+      |> to_source_file("lib/neo_web/test_module.ex")
+      |> run_check(Check)
+      |> assert_check_issue("Consider using Enum.sum instead of Enum.reduce.")
+    end
   end
 
   describe "sum_by: +" do
@@ -185,6 +198,19 @@ defmodule CredoUnnecessaryReduce.SumTest do
       |> run_check(Check)
       |> assert_check_issue("Consider using Enum.sum_by instead of Enum.reduce.")
     end
+
+    test "ok when piped" do
+      """
+      defmodule NeoWeb.TestModule do
+        def mult(numbers) do
+          numbers |> Enum.reduce(0, fn number, result -> (number * 2) + result end)
+        end
+      end
+      """
+      |> to_source_file("lib/neo_web/test_module.ex")
+      |> run_check(Check)
+      |> assert_check_issue("Consider using Enum.sum_by instead of Enum.reduce.")
+    end
   end
 
   describe "sum: -" do
@@ -241,6 +267,19 @@ defmodule CredoUnnecessaryReduce.SumTest do
       defmodule NeoWeb.TestModule do
         def mult(numbers) do
           Enum.reduce(numbers, 2, fn i, acc -> acc - i end)
+        end
+      end
+      """
+      |> to_source_file("lib/neo_web/test_module.ex")
+      |> run_check(Check)
+      |> assert_check_issue("Consider using Enum.sum instead of Enum.reduce.")
+    end
+
+    test "ok when piped" do
+      """
+      defmodule NeoWeb.TestModule do
+        def mult(numbers) do
+          numbers |> Enum.reduce(0, fn number, result -> number - result end)
         end
       end
       """
@@ -326,6 +365,19 @@ defmodule CredoUnnecessaryReduce.SumTest do
       defmodule NeoWeb.TestModule do
         def mult(numbers) do
           Enum.reduce(numbers, 2, fn i, acc -> acc - (i + 4) end)
+        end
+      end
+      """
+      |> to_source_file("lib/neo_web/test_module.ex")
+      |> run_check(Check)
+      |> assert_check_issue("Consider using Enum.sum_by instead of Enum.reduce.")
+    end
+
+    test "ok when piped" do
+      """
+      defmodule NeoWeb.TestModule do
+        def mult(numbers) do
+          numbers |> Enum.reduce(0, fn number, result -> (number * 2) - result end)
         end
       end
       """
