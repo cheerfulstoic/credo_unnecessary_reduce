@@ -38,9 +38,12 @@ defmodule CredoUnnecessaryReduce.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:credo, "~> 1.7"},
+      {:credo, ">= 1.0.0"},
       {:mix_test_watch, "~> 1.2", only: :dev, runtime: false},
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:benchee, "~> 1.0", only: :dev},
+      {:benchee_html, "~> 1.0", only: :dev},
+      {:benchee_csv, "~> 1.0", only: :dev}
     ]
   end
 end
