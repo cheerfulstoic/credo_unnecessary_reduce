@@ -73,6 +73,27 @@ defmodule CredoUnnecessaryReduce.FilterTest do
     |> assert_check_issue("Consider using Enum.filter or Enum.reject instead of Enum.reduce.")
   end
 
+  test "ok when piped" do
+    """
+    defmodule NeoWeb.TestModule do
+      def only_even(numbers) do
+        numbers
+        |> Enum.reduce([], fn number, result ->
+          if rem(number, 2) == 0 do
+            [number | result]
+          else
+            result
+          end
+        end)
+        |> Enum.reverse()
+      end
+    end
+    """
+    |> to_source_file("lib/neo_web/test_module.ex")
+    |> run_check(Check)
+    |> assert_check_issue("Consider using Enum.filter or Enum.reject instead of Enum.reduce.")
+  end
+
   test "Concatenation to the end" do
     """
     defmodule NeoWeb.TestModule do

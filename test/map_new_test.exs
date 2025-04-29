@@ -52,6 +52,23 @@ defmodule CredoUnnecessaryReduce.MapNewTest do
     |> assert_check_issue("Consider using Map.new instead of Enum.reduce.")
   end
 
+  test "ok when piped" do
+    """
+    defmodule NeoWeb.TestModule do
+      def doubles(numbers) do
+        numbers
+        |> Enum.reduce(%{}, fn number, acc ->
+          Map.put(acc, number, number * 2)
+        end)
+      end
+    end
+
+    """
+    |> to_source_file("lib/neo_web/test_module.ex")
+    |> run_check(Check)
+    |> assert_check_issue("Consider using Map.new instead of Enum.reduce.")
+  end
+
   test "Variables don't matter" do
     """
     defmodule NeoWeb.TestModule do
