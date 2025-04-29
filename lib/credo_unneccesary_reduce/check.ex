@@ -20,12 +20,59 @@ defmodule CredoUnnecessaryReduce.Check do
     Credo.Code.prewalk(source_file, &traverse(&1, &2, issue_meta))
   end
 
+  # For when the function is called directly
   defp traverse(
-         {{:., _, [{:__aliases__, _, [:Enum]}, :reduce]}, meta, args} = ast,
+         {{:., _, [{:__aliases__, _, [:Enum]}, :reduce]} = call_ast, meta,
+          [
+            _enumerable,
+            initial_value,
+            {:fn, _, [{:->, _, [[_item_ast, {_acc_var, _, nil}], _body_ast]}]} = fn_ast
+          ]},
          issues,
          issue_meta
        ) do
-    new_issue = maybe_build_issue(args, meta, issue_meta)
+    traverse(
+      {call_ast, meta, [initial_value, fn_ast]},
+      issues,
+      issue_meta
+    )
+  end
+
+  # For when the function is piped
+  defp traverse(
+         {{:., _, [{:__aliases__, _, [:Enum]}, :reduce]}, meta,
+          [
+            initial_value,
+            {:fn, _, [{:->, _, [[item_ast, {acc_var, _, nil}], body_ast]}]}
+          ]} =
+           ast,
+         issues,
+         issue_meta
+       ) do
+    # Not ideal really, but these might be the only cases we deal with
+    # and it would be nice to avoid having `reduce_reducible_to` have to
+    # deal with more ast stuff...
+    new_issue =
+      case reduce_reducible_to(initial_value, item_ast, acc_var, body_ast) do
+        suggested_functions when is_list(suggested_functions) ->
+          suggestions = Enum.join(suggested_functions, " or ")
+
+          issue_for(
+            issue_meta,
+            meta[:line],
+            "Consider using #{suggestions} instead of Enum.reduce."
+          )
+
+        nil ->
+          nil
+
+        suggested_function ->
+          issue_for(
+            issue_meta,
+            meta[:line],
+            "Consider using #{suggested_function} instead of Enum.reduce."
+          )
+      end
 
     if new_issue do
       {ast, [new_issue | issues]}
@@ -37,43 +84,6 @@ defmodule CredoUnnecessaryReduce.Check do
   defp traverse(ast, issues, _issue_meta) do
     # dbg(ast)
     {ast, issues}
-  end
-
-  defp maybe_build_issue([_enumerable, initial_value, fun], meta, issue_meta),
-    do: maybe_build_issue(initial_value, fun, meta, issue_meta)
-
-  defp maybe_build_issue([initial_value, fun], meta, issue_meta),
-    do: maybe_build_issue(initial_value, fun, meta, issue_meta)
-
-  defp maybe_build_issue(
-         initial_value,
-         {:fn, _, [{:->, _, [[item_ast, {acc_var, _, nil}], body_ast]}]},
-         meta,
-         issue_meta
-       ) do
-    # Not idea really, but these might be the only cases we deal with
-    # and it would be nice to avoid having `reduce_reducible_to` have to
-    # deal with more ast stuff...
-    case reduce_reducible_to(initial_value, item_ast, acc_var, body_ast) do
-      suggested_functions when is_list(suggested_functions) ->
-        suggestions = Enum.join(suggested_functions, " or ")
-
-        issue_for(
-          issue_meta,
-          meta[:line],
-          "Consider using #{suggestions} instead of Enum.reduce."
-        )
-
-      nil ->
-        nil
-
-      suggested_function ->
-        issue_for(
-          issue_meta,
-          meta[:line],
-          "Consider using #{suggested_function} instead of Enum.reduce."
-        )
-    end
   end
 
   # Will this work?  Not sure if everything can be judged by the last line...
