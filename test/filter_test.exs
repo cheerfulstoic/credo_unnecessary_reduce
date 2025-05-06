@@ -73,7 +73,7 @@ defmodule CredoUnnecessaryReduce.FilterTest do
     |> assert_check_issue("Consider using Enum.filter or Enum.reject instead of Enum.reduce.")
   end
 
-  test "ok when piped" do
+  test "catches when Enum.reduce is piped" do
     """
     defmodule NeoWeb.TestModule do
       def only_even(numbers) do

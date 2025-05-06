@@ -87,7 +87,7 @@ defmodule CredoUnnecessaryReduce.SplitWithTest do
     |> refute_issues()
   end
 
-  test "ok when piped" do
+  test "catches when Enum.reduce is piped" do
     """
     {events, odds} =
       numbers
