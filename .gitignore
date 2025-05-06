@@ -24,3 +24,6 @@ credo_unnecessary_reduce-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+benchmarks/benchmark
+benchmarks/benchmark.csv
