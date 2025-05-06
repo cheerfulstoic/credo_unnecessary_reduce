@@ -26,7 +26,7 @@ defmodule CredoUnnecessaryReduce.Check do
           [
             _enumerable,
             initial_value,
-            {:fn, _, [{:->, _, [[_item_ast, {_acc_var, _, nil}], _body_ast]}]} = fn_ast
+            {:fn, _, [{:->, _, [[_item_ast, _acc_ast], _body_ast]}]} = fn_ast
           ]},
          issues,
          issue_meta
@@ -43,7 +43,7 @@ defmodule CredoUnnecessaryReduce.Check do
          {{:., _, [{:__aliases__, _, [:Enum]}, :reduce]}, meta,
           [
             initial_value,
-            {:fn, _, [{:->, _, [[item_ast, {acc_var, _, nil}], body_ast]}]}
+            {:fn, _, [{:->, _, [[item_ast, acc_ast], body_ast]}]}
           ]} =
            ast,
          issues,
@@ -53,7 +53,7 @@ defmodule CredoUnnecessaryReduce.Check do
     # and it would be nice to avoid having `reduce_reducible_to` have to
     # deal with more ast stuff...
     new_issue =
-      case reduce_reducible_to(initial_value, item_ast, acc_var, body_ast) do
+      case reduce_reducible_to(initial_value, item_ast, acc_ast, body_ast) do
         suggested_functions when is_list(suggested_functions) ->
           suggestions = Enum.join(suggested_functions, " or ")
 
@@ -90,17 +90,17 @@ defmodule CredoUnnecessaryReduce.Check do
   defp reduce_reducible_to(
          initial_value,
          item_ast,
-         acc_var,
+         acc_ast,
          {:__block__, _, list_ast}
        )
        when is_list(list_ast) do
-    reduce_reducible_to(initial_value, item_ast, acc_var, List.last(list_ast))
+    reduce_reducible_to(initial_value, item_ast, acc_ast, List.last(list_ast))
   end
 
   defp reduce_reducible_to(
          [],
          _item_ast,
-         acc_var,
+         {acc_var, _, nil},
          {:++, _, [{acc_var, _, nil}, list_ast]}
        )
        when is_list(list_ast) do
@@ -119,7 +119,7 @@ defmodule CredoUnnecessaryReduce.Check do
   defp reduce_reducible_to(
          [],
          _item_ast,
-         acc_var,
+         {acc_var, _, nil},
          list_ast
        )
        when is_list(list_ast) do
@@ -134,7 +134,7 @@ defmodule CredoUnnecessaryReduce.Check do
   defp reduce_reducible_to(
          initial_value,
          item_ast,
-         acc_var,
+         {acc_var, _, nil},
          {:if, _, [_, [do: ast, else: {acc_var, _, nil}]]}
        ) do
     if_is_reducible_to(initial_value, item_ast, acc_var, ast)
@@ -143,7 +143,7 @@ defmodule CredoUnnecessaryReduce.Check do
   defp reduce_reducible_to(
          initial_value,
          item_ast,
-         acc_var,
+         {acc_var, _, nil},
          {:if, _, [_, [do: {acc_var, _, nil}, else: ast]]}
        ) do
     if_is_reducible_to(initial_value, item_ast, acc_var, ast)
@@ -152,7 +152,7 @@ defmodule CredoUnnecessaryReduce.Check do
   defp reduce_reducible_to(
          init,
          {item_var, _, nil},
-         acc_var,
+         {acc_var, _, nil},
          {operation, _, [part1_ast, part2_ast]}
        )
        when operation in ~w[+ - *]a do
@@ -187,7 +187,7 @@ defmodule CredoUnnecessaryReduce.Check do
   defp reduce_reducible_to(
          true,
          _item_ast,
-         acc_var,
+         {acc_var, _, nil},
          {operator, _,
           [
             {acc_var, _, nil},
@@ -201,7 +201,7 @@ defmodule CredoUnnecessaryReduce.Check do
   defp reduce_reducible_to(
          true,
          _item_ast,
-         acc_var,
+         {acc_var, _, nil},
          {operator, _,
           [
             _,
@@ -215,7 +215,7 @@ defmodule CredoUnnecessaryReduce.Check do
   defp reduce_reducible_to(
          false,
          _item_ast,
-         acc_var,
+         {acc_var, _, nil},
          {operator, _,
           [
             {acc_var, _, nil},
@@ -229,7 +229,7 @@ defmodule CredoUnnecessaryReduce.Check do
   defp reduce_reducible_to(
          false,
          _item_ast,
-         acc_var,
+         {acc_var, _, nil},
          {operator, _,
           [
             _,
@@ -243,7 +243,7 @@ defmodule CredoUnnecessaryReduce.Check do
   defp reduce_reducible_to(
          {:%{}, _, _},
          _item_ast,
-         acc_var,
+         {acc_var, _, nil},
          {{:., _, [{:__aliases__, _, [:Map]}, :put]}, _,
           [
             {acc_var, _, nil},
@@ -254,11 +254,57 @@ defmodule CredoUnnecessaryReduce.Check do
     "Map.new"
   end
 
-  defp reduce_reducible_to(_initial_value, _item_ast, _acc_var, _ast) do
+  defp reduce_reducible_to(
+         {[], []},
+         {_item_var, _, nil},
+         {{_true_ast_var, _, nil}, {_false_ast_var, _, nil}},
+         {:if, _,
+          [
+            _,
+            [
+              do: {
+                do_ast1,
+                do_ast2
+              },
+              else: {
+                else_ast1,
+                else_ast2
+              }
+            ]
+          ]}
+       ) do
+    adds_item_fn = fn ast ->
+      match?(
+        [
+          {:|, _,
+           [
+             _,
+             {_true_ast_var, _, nil}
+           ]}
+        ],
+        ast
+      ) ||
+        match?({:++, _, [{_true_ast_var, _, nil}, [_]]}, ast)
+    end
+
+    keeps_same_fn = fn
+      {var, _, nil} when is_atom(var) -> true
+      _ -> false
+    end
+
+    if (adds_item_fn.(do_ast1) && keeps_same_fn.(do_ast2) && keeps_same_fn.(else_ast1) &&
+          adds_item_fn.(else_ast2)) ||
+         (keeps_same_fn.(do_ast1) && adds_item_fn.(do_ast2) && adds_item_fn.(else_ast1) &&
+            keeps_same_fn.(else_ast2)) do
+      "Enum.split_with"
+    end
+  end
+
+  defp reduce_reducible_to(_initial_value, _item_ast, _acc_ast, _ast) do
     nil
   end
 
-  # defp reduce_reducible_to(initial_value, item_ast, acc_var, ast) do
+  # defp reduce_reducible_to(initial_value, item_ast, acc_ast, ast) do
   #   dbg()
   #   nil
   # end

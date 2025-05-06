@@ -57,6 +57,7 @@ Currently this library checks for cases of `Enum.reduce` which could be replaced
 * `Enum.reject`
 * `Enum.sum`
 * `Enum.count`
+* `Enum.split_with`
 * `Map.new`
 
 See [Examples](https://github.com/cheerfulstoic/credo_unnecessary_reduce/wiki/Examples) for specific cases of code that is detected.
