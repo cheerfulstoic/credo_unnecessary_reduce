@@ -56,6 +56,7 @@ Currently this library checks for cases of `Enum.reduce` which could be replaced
 * `Enum.product_by`
 * `Enum.reject`
 * `Enum.sum`
+* `Enum.sum_by`
 * `Enum.count`
 * `Enum.split_with`
 * `Map.new`
@@ -75,7 +76,15 @@ def deps do
 end
 ```
 
-Then you should add `{CredoUnnecessaryReduce.Check, []},` to your `.credo.exs` file under the `enabled` section.
+You can enable the check by adding it to your `.credo.exs` file under the `checks` section:
+
+```elixir
+[
+  checks: [
+    # Other checks...
+    {CredoUnnecessaryReduce.Check, []}
+  ]
+]
 
 ## Combination cases
 
@@ -101,6 +110,16 @@ numbers
 ```
 
 In this case the `credo_unnecessary_reduce` check will just recommend replacing with the outermost pattern in can detect (`Enum.filter` in this case).  It may be possible to support suggesting the whole chain, but because of the complexity of that challenge it's enough for now that `Enum.reduce` calls that can be simplified are identified successfully.
+
+## Current Limitations
+
+The check currently detects and suggests replacements for certain patterns of `Enum.reduce`. However, it may not suggest the full chain of refactors, especially in complex combinations where multiple operations are performed in sequence.
+
+## Bugs
+
+This library is designed to lean on the side of triggering **only when a use of reduce would be better served by another function**.  This means that there are some cases it will never be able to catch.
+
+Also, it's possible that it may catch cases which don't necessarily need to be replaced.  If you could make an argument that `reduce` is better, that could be a bug and a GitHub issue would be welcome!
 
 ## TODO
 

@@ -1,6 +1,9 @@
 defmodule CredoUnnecessaryReduce.Check do
   @moduledoc """
-  TODO
+  This Credo check identifies instances where `Enum.reduce` can be 
+  replaced with more idiomatic and efficient functions, such as 
+  `Enum.filter`, `Enum.map`, `Enum.any?`, and `Map.new`.
+
   """
 
   use Credo.Check,
