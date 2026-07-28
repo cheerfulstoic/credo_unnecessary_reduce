@@ -71,7 +71,7 @@ by adding `credo_unnecessary_reduce` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:credo_unnecessary_reduce, "~> 0.4.0", only: [:dev, :test}
+    {:credo_unnecessary_reduce, "~> 0.4.0", only: [:dev, :test]}
   ]
 end
 ```
